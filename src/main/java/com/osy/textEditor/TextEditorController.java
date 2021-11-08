@@ -15,7 +15,8 @@ public class TextEditorController {
 	private static final Logger logger = LoggerFactory.getLogger(TextEditorController.class);
 	
 	/**
-	 * Simply selects the home view to render by returning its name.
+	 * textEditor 실행
+	 * @return
 	 */
 	@RequestMapping(value = "/textEditor", method = RequestMethod.GET)
 	public String textEditorView() {
