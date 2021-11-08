@@ -4,7 +4,9 @@
 <h3>텍스트 편집기</h3>
 <ul>
   <li>복수의 단어 선택/삭제 가능한 텍스트 편집기</li>
-  <li>http://localhost:9091/textEditor</li>
+  <li>언어: 웹(Javascript+HTML)</li>
+  <li>로직 구현: /WEB-INF/views/textEditor/textEditorView.jsp</li>
+  <li>URI: http://localhost:9091/textEditor</li>
 </ul>
 
 
