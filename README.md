@@ -1,5 +1,5 @@
 # Project_TextEditor
-![image](https://user-images.githubusercontent.com/80368430/140741326-4bae7f4b-de3b-464f-ae14-652dda9df612.PNG)
+![image](https://user-images.githubusercontent.com/80368430/140927519-2f111ac0-a1a2-4d9f-8b74-dc847cd488c4.PNG)
 
 <h3>텍스트 편집기</h3>
 
