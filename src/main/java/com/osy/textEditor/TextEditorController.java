@@ -17,7 +17,7 @@ public class TextEditorController {
 	 */
 	@RequestMapping(value = "/text-editor", method = RequestMethod.GET)
 	public String textEditorView() {
-		logger.info("text-editor 실행");
+		logger.info("text-editor 실행"); 
 		return "textEditor/textEditorView";
 	}
 	
