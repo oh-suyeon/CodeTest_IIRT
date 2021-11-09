@@ -194,7 +194,7 @@
 		function addTextForAddBtn() {
 			let selectTexts = [];
 			selectTexts = document.querySelectorAll("." + STYLE_CLASS.SELECT);
-			if(selectTexts.length === 0) return false;
+			if(selectTexts.length === 0) return false; 
 			return selectTexts;
 		}
 		

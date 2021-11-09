@@ -19,7 +19,7 @@ public class TextEditorController {
 	public String textEditorView() {
 		logger.info("text-editor 실행"); 
 		return "textEditor/textEditorView";
-	}
+	} 
 	
 	
 }
