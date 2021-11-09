@@ -12,12 +12,12 @@ public class TextEditorController {
 	private static final Logger logger = LoggerFactory.getLogger(TextEditorController.class);
 	
 	/**
-	 * textEditor 실행
+	 * Text Editor 실행
 	 * @return
 	 */
-	@RequestMapping(value = "/textEditor", method = RequestMethod.GET)
+	@RequestMapping(value = "/text-editor", method = RequestMethod.GET)
 	public String textEditorView() {
-		logger.info("textEditor 실행");
+		logger.info("text-editor 실행");
 		return "textEditor/textEditorView";
 	}
 	

@@ -3,7 +3,7 @@
 <head>
 	<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 	
-	<title>TextEditor</title>
+	<title>Text Editor</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	
 	<!-- bootstrap -->
@@ -56,82 +56,124 @@
 
 	<script>
 		
-		// ** var 사용하지 않기 (const/let 사용)
-		// ** jquery 사용하지 않기
+		let editHistory = [];
+		let undoHistory = [];
 		
-		// 편집 내역
-		let editHistory = new Array();
-		// 실행 취소 내역 
-		let undoHistory = new Array();
+		const HISTORY_TYPE = {
+			SELECT 		: 1
+			, ADD 		: 2
+			, DELETE 	: 3
+		}
+		
+		const SAVE_YN = {
+			Y 	: 1
+			, N : 0
+		}
+		
+		const STYLE_CLASS = {
+			SELECT 	: "selectText"
+			, ADD 	: "addText"
+		}
 		
 		document.addEventListener("DOMContentLoaded", function () {
-			fn_generateText(); // 10,000개 단어 생성
 			
-			// [단어] 클릭 이벤트
-			const textSpans = document.querySelectorAll(".textSpan")
-			for(const textSpan of textSpans){
-				textSpan.addEventListener("click", function (e) {
-					const flag = fn_selectText(e.target);
-					if(flag != false){
-						fn_recodeEditHistory("select", e.target);
-						undoHistory = new Array(); // 초기화
-					}
-				});
-			}
+			generateText();
 			
-			// [추가] 버튼 클릭 이벤트
-			document.querySelector("#addTextBtn").addEventListener("click", function () {
-				const selectTexts = fn_addText();
-				if(selectTexts != false){
-					fn_recodeEditHistory("add", selectTexts);
-					undoHistory = new Array(); // 초기화
-				}
-			});
+			textSpanClickEvent();
+			
+			addTextBtnClickEvent();
 
-			// [실행취소] 버튼 클릭 이벤트
-			document.querySelector("#undoBtn").addEventListener("click", function () {
-				fn_undo();
-			});
-			
-			// [재실행] 버튼 클릭 이벤트
-			document.querySelector("#redoBtn").addEventListener("click", function () {
-				fn_redo();
-			});
+			undoBtnClickEvent();
+
+			redoBtnClickEvent();
 			
 		});
-		
-		// 10,000개 단어 생성
-		function fn_generateText() {
+
+		function generateText() {
 			const characters = "abcdefghijklmnopqrstuvwxyz";
 			
 			let generatedTexts = "";
 			
 			for(let i = 0; i <= 10000; i++){
 				let generatedText = "";
-				let textlenght = Math.floor(Math.random() * 7.5) + 3; // 3 ~ 10 길이의 단어 생성  
+				let textlenght = getTextLenght(); 
 				for(let j = 0; j < textlenght; j++){
-					let randomIdx = Math.floor(Math.random() * 26);
+					let randomIdx = getRandomIdx();
 					generatedText += characters[randomIdx];
 				}
-				generatedTexts += "<span class='textSpan'>"+generatedText+"</span> "; // span으로 생성, 클릭 시 기능 추가
+				generatedTexts += renderSpan(generatedText); 
 			}
 			document.querySelector("#generatedText").innerHTML = generatedTexts;	
 		}
 		
-		// editHistory 기록 배열 추가
-		let historyId = 0;
-		function fn_recodeEditHistory(typeInput, textInput) {
-			let edit = {
-				type: typeInput
-				,text: textInput
-				,historyId: historyId
-			}
-			editHistory.push(edit);
-			historyId++;
+		function getTextLenght() {
+			return Math.floor(Math.random() * 7.5) + 3;
 		}
+		
+		function getRandomIdx() {
+			return Math.floor(Math.random() * 26);
+		}
+		
+		function renderSpan(generatedText) {
+			return "<span class='textSpan'>"+generatedText+"</span> ";
+		}
+		
+		function textSpanClickEvent() {
+			const textSpans = document.querySelectorAll(".textSpan")
+			for(const textSpan of textSpans){
+				textSpan.addEventListener("click", function (e) {
+					const saveYn = selectText(e.target);
+					if(saveYn !== SAVE_YN.N){
+						historyApp.recodeEditHistory(HISTORY_TYPE.SELECT, e.target);
+						undoHistory = []; 
+					}
+				});
+			}
+		}
+		
+		function addTextBtnClickEvent() {
+			document.querySelector("#addTextBtn").addEventListener("click", function () {
+				const selectTexts = addTextForAddBtn();
+				if(selectTexts !== false){
+					const historyId = historyApp.recodeEditHistory(HISTORY_TYPE.ADD, selectTexts);
+					renderTr(selectTexts, historyId);
+					undoHistory = []; 
+				}
+			});
+		}
+		
+		function undoBtnClickEvent() {
+			document.querySelector("#undoBtn").addEventListener("click", function () {
+				undo();
+			});
+		}
+		
+		function redoBtnClickEvent() {
+			document.querySelector("#redoBtn").addEventListener("click", function () {
+				redo();
+			});
+		}
+		
+		// 클로저 사용
+		const historyApp = (function () {
+			let historyIdCnt = 0;
+			function recodeEditHistory(typeInput, textInput) {
+				let edit = {
+					type: typeInput
+					,text: textInput
+					,historyId: historyIdCnt++
+				}
+				editHistory.push(edit);
+				return historyIdCnt - 1;
+			}
+			function getNextHistoryId() {
+				return historyIdCnt;
+			}
+			return {recodeEditHistory : recodeEditHistory
+					, getNextHistoryId : getNextHistoryId};
+		})();
 
-		// 기록 객체를 historyId로 검색
-		function fn_findHistoryById(historyIdParam) {
+		function findHistoryById(historyIdParam) {
 			const history = editHistory.concat(undoHistory).find(function(element) {
 				if(element.historyId == historyIdParam){
 					return true;
@@ -140,32 +182,30 @@
 			return history;
 		}
 		
-		// [선택]
-		function fn_selectText(text) {
-			if(text.classList.contains("selectText") || text.classList.contains("addText")){
+		function selectText(text) {
+			if(text.classList.contains(STYLE_CLASS.SELECT) || text.classList.contains(STYLE_CLASS.ADD)){
 				return false;
 			}else{
-				text.classList.add("selectText");
+				text.classList.add(STYLE_CLASS.SELECT);
 				return true;
 			}
 		}
 		
-		// [추가]
-		function fn_addText(historyIdParam) {
-			let selectTexts = new Array();
-			let historyIdInnerVal = historyId;
-			
-			// 선택된 단어를 배열에 추가
-			if(historyIdParam != null){
-				const history = fn_findHistoryById(historyIdParam);
-				selectTexts = history.text;
-				historyIdInnerVal = historyIdParam
-			}else {
-				selectTexts = document.querySelectorAll(".selectText");
-				if(selectTexts.length == 0) return false;
-			}
-			
-			// div에 추가
+		function addTextForAddBtn() {
+			let selectTexts = [];
+			selectTexts = document.querySelectorAll("." + STYLE_CLASS.SELECT);
+			if(selectTexts.length === 0) return false;
+			return selectTexts;
+		}
+		
+		function addTextForUndoRedoBtn(historyId) {
+			let selectTexts = [];
+			const history = findHistoryById(historyId);
+			selectTexts = history.text;
+			renderTr(selectTexts, historyId);
+		}
+		
+		function renderTr(selectTexts, historyId) {
 			const tr = document.createElement("tr");
 			tr.classList.add("borderBottom");
 
@@ -176,74 +216,71 @@
 				tdInnerText.innerText = selectText.innerText;
 				tdselectText.append(tdInnerText);
 				
-				// 하이라이트 효과
-				selectText.classList.remove("selectText");
-				selectText.classList.add("addText");
+				selectText.classList.remove(STYLE_CLASS.SELECT);
+				selectText.classList.add(STYLE_CLASS.ADD);
 			}
 			document.querySelector("#selectText").append(tr);
 			tr.append(tdselectText);
 			
-			// 삭제 버튼
 			const tdDeleteBtn = document.createElement("td");
-			tdDeleteBtn.innerHTML = "<button type='button' class='btn btn-light' onclick='fn_deleteText("+historyIdInnerVal+")'>X</button>";
+			tdDeleteBtn.innerHTML = renderBtn(historyId);
 			tr.append(tdDeleteBtn);
-			tr.setAttribute("id", "tr" + historyIdInnerVal); // 삭제하기 위해 id를 지정
-			
-			return selectTexts;
+			tr.setAttribute("id", "tr" + historyId); 
 		}
 		
-		// [삭제]
-		function fn_deleteText(historyIdParam, historyFlag) {
+		function renderBtn(historyId) {
+			return "<button type='button' class='btn btn-light' onclick='deleteText("+historyId+")'>X</button>"
+		}
+		
+		function deleteText(historyIdParam, saveYn) {
 			document.querySelector("#tr" + historyIdParam).remove();
 
-			const history = fn_findHistoryById(historyIdParam);
+			const history = findHistoryById(historyIdParam);
 			
 			for(const text of history.text){
-				text.classList.remove("addText");
+				text.classList.remove(STYLE_CLASS.ADD);
 			}
 			
-			if(historyFlag == null){
-				fn_recodeEditHistory("delete", history.text);
+			if(saveYn !== SAVE_YN.N){
+				historyApp.recodeEditHistory(HISTORY_TYPE.DELETE, history.text);
 				editHistory[editHistory.length - 1].addTextHistoryId = historyIdParam;
-				undoHistory = new Array(); // 초기화
+				undoHistory = [];
 			}
 		} 
 		
-		// [실행 취소]
-		function fn_undo() {
-			if(editHistory.length == 0) return;
+		function undo() {
+			if(editHistory.length === 0) return;
 			
 			const lastHistory = editHistory.pop();
 			undoHistory.push(lastHistory);
 			
-			if(lastHistory.type == "select"){ 
-				lastHistory.text.classList.remove("selectText");
+			if(lastHistory.type === HISTORY_TYPE.SELECT){ 
+				lastHistory.text.classList.remove(STYLE_CLASS.SELECT);
 				
-			}else if(lastHistory.type == "add"){ 
-				fn_deleteText(lastHistory.historyId, 1); // 1(historyFlag)을 넣어 editHistory에 기록하지 않음
+			}else if(lastHistory.type === HISTORY_TYPE.ADD){ 
+				deleteText(lastHistory.historyId, SAVE_YN.N); 
 				for(const text of lastHistory.text){ // 다시 [선택] 상태로 만들기
-					fn_selectText(text);
+					selectText(text);
 				}
 				
-			}else if(lastHistory.type == "delete"){ 
-				fn_addText(lastHistory.addTextHistoryId);
+			}else if(lastHistory.type === HISTORY_TYPE.DELETE){ 
+				addTextForUndoRedoBtn(lastHistory.addTextHistoryId);
 			}
 		}
 		
-		// [재실행]
-		function fn_redo() {
-			if(undoHistory.length == 0) return;
+		function redo() {
+			if(undoHistory.length === 0) return;
 			
 			const lastUndo = undoHistory[undoHistory.length - 1];
 
-			if(lastUndo.type == "select"){
-				fn_selectText(lastUndo.text);
+			if(lastUndo.type === HISTORY_TYPE.SELECT){
+				selectText(lastUndo.text);
 				
-			}else if(lastUndo.type == "add"){
-				fn_addText(lastUndo.historyId);
+			}else if(lastUndo.type === HISTORY_TYPE.ADD){
+				addTextForUndoRedoBtn(lastUndo.historyId);
 				
-			}else if(lastUndo.type == "delete"){
-				fn_deleteText(lastUndo.addTextHistoryId);
+			}else if(lastUndo.type === HISTORY_TYPE.DELETE){
+				deleteText(lastUndo.addTextHistoryId);
 			}
 			editHistory.push(lastUndo);
 			undoHistory.pop(); 
