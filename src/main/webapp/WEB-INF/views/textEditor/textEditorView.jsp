@@ -73,6 +73,7 @@
 		const STYLE_CLASS = {
 			SELECT 	: "selectText"
 			, ADD 	: "addText"
+			, TR	: "borderBottom"
 		}
 		
 		document.addEventListener("DOMContentLoaded", function () {
@@ -88,6 +89,18 @@
 			redoBtnClickEvent();
 			
 		});
+
+		function printLog(){
+			console.log("editHistory");
+			for(const history of editHistory){
+				console.log(history);
+			}
+			
+			console.log("undoHistory");
+			for(const history of undoHistory){
+				console.log(history);
+			}
+		}
 
 		function generateText() {
 			const characters = "abcdefghijklmnopqrstuvwxyz";
@@ -123,10 +136,9 @@
 			for(const textSpan of textSpans){
 				textSpan.addEventListener("click", function (e) {
 					const saveYn = selectText(e.target);
-					if(saveYn !== SAVE_YN.N){
-						historyApp.recodeEditHistory(HISTORY_TYPE.SELECT, e.target);
-						undoHistory = []; 
-					}
+					if(saveYn === SAVE_YN.N) return;
+					historyApp.recodeEditHistory(HISTORY_TYPE.SELECT, e.target);
+					undoHistory = []; 
 				});
 			}
 		}
@@ -164,6 +176,7 @@
 					,historyId: historyIdCnt++
 				}
 				editHistory.push(edit);
+				printLog();
 				return historyIdCnt - 1;
 			}
 			function getNextHistoryId() {
@@ -192,22 +205,20 @@
 		}
 		
 		function addTextForAddBtn() {
-			let selectTexts = [];
-			selectTexts = document.querySelectorAll("." + STYLE_CLASS.SELECT);
+			let selectTexts = document.querySelectorAll("." + STYLE_CLASS.SELECT);
 			if(selectTexts.length === 0) return false; 
 			return selectTexts;
 		}
 		
 		function addTextForUndoRedoBtn(historyId) {
-			let selectTexts = [];
 			const history = findHistoryById(historyId);
-			selectTexts = history.text;
+			let selectTexts = history.text;
 			renderTr(selectTexts, historyId);
 		}
 		
 		function renderTr(selectTexts, historyId) {
 			const tr = document.createElement("tr");
-			tr.classList.add("borderBottom");
+			tr.classList.add(STYLE_CLASS.TR);
 
 			const tdselectText = document.createElement("td");
 			
@@ -232,20 +243,20 @@
 			return "<button type='button' class='btn btn-light' onclick='deleteText("+historyId+")'>X</button>"
 		}
 		
-		function deleteText(historyIdParam, saveYn) {
-			document.querySelector("#tr" + historyIdParam).remove();
+		function deleteText(historyId, saveYn) {
+			document.querySelector("#tr" + historyId).remove();
 
-			const history = findHistoryById(historyIdParam);
+			const history = findHistoryById(historyId);
 			
 			for(const text of history.text){
 				text.classList.remove(STYLE_CLASS.ADD);
 			}
 			
-			if(saveYn !== SAVE_YN.N){
-				historyApp.recodeEditHistory(HISTORY_TYPE.DELETE, history.text);
-				editHistory[editHistory.length - 1].addTextHistoryId = historyIdParam;
-				undoHistory = [];
-			}
+			if(saveYn === SAVE_YN.N) return;
+			
+			historyApp.recodeEditHistory(HISTORY_TYPE.DELETE, history.text);
+			editHistory[editHistory.length - 1].addTextHistoryId = historyId;
+			undoHistory = [];
 		} 
 		
 		function undo() {
@@ -253,6 +264,7 @@
 			
 			const lastHistory = editHistory.pop();
 			undoHistory.push(lastHistory);
+			printLog();
 			
 			if(lastHistory.type === HISTORY_TYPE.SELECT){ 
 				lastHistory.text.classList.remove(STYLE_CLASS.SELECT);
@@ -284,6 +296,7 @@
 			}
 			editHistory.push(lastUndo);
 			undoHistory.pop(); 
+			printLog();
 		}
 	</script>
 
