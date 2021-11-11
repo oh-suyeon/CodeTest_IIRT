@@ -76,7 +76,7 @@
 			, TR	: "borderBottom"
 		}
 		
-		document.addEventListener("DOMContentLoaded", function () {
+		document.addEventListener("DOMContentLoaded", ()=>{
 			
 			generateText();
 			
@@ -134,7 +134,7 @@
 		function textSpanClickEvent() {
 			const textSpans = document.querySelectorAll(".textSpan")
 			for(const textSpan of textSpans){
-				textSpan.addEventListener("click", function (e) {
+				textSpan.addEventListener("click", e => {
 					const saveYn = selectText(e.target);
 					if(saveYn === SAVE_YN.N) return;
 					historyApp.recodeEditHistory(HISTORY_TYPE.SELECT, e.target);
@@ -144,7 +144,7 @@
 		}
 		
 		function addTextBtnClickEvent() {
-			document.querySelector("#addTextBtn").addEventListener("click", function () {
+			document.querySelector("#addTextBtn").addEventListener("click", ()=>{
 				const selectTexts = addTextForAddBtn();
 				if(selectTexts !== false){
 					const historyId = historyApp.recodeEditHistory(HISTORY_TYPE.ADD, selectTexts);
@@ -155,19 +155,15 @@
 		}
 		
 		function undoBtnClickEvent() {
-			document.querySelector("#undoBtn").addEventListener("click", function () {
-				undo();
-			});
+			document.querySelector("#undoBtn").addEventListener("click", ()=>undo());
 		}
 		
 		function redoBtnClickEvent() {
-			document.querySelector("#redoBtn").addEventListener("click", function () {
-				redo();
-			});
+			document.querySelector("#redoBtn").addEventListener("click", ()=>redo());
 		}
 		
 		// 클로저 사용
-		const historyApp = (function () {
+		const historyApp = ( ()=>{
 			let historyIdCnt = 0;
 			function recodeEditHistory(typeInput, textInput) {
 				let edit = {
@@ -187,7 +183,7 @@
 		})();
 
 		function findHistoryById(historyIdParam) {
-			const history = editHistory.concat(undoHistory).find(function(element) {
+			const history = editHistory.concat(undoHistory).find( element => {
 				if(element.historyId == historyIdParam){
 					return true;
 				}
