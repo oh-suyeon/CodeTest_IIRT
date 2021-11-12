@@ -165,6 +165,7 @@
 		// 클로저 사용
 		const historyApp = ( ()=>{
 			let historyIdCnt = 0;
+			
 			function recodeEditHistory(typeInput, textInput) {
 				let edit = {
 					type: typeInput
@@ -175,11 +176,14 @@
 				printLog();
 				return historyIdCnt - 1;
 			}
+			
 			function getNextHistoryId() {
 				return historyIdCnt;
 			}
+			
 			return {recodeEditHistory : recodeEditHistory
 					, getNextHistoryId : getNextHistoryId};
+					
 		})();
 
 		function findHistoryById(historyIdParam) {
