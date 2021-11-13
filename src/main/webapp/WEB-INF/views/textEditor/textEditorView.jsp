@@ -270,12 +270,14 @@
 				lastHistory.text.classList.remove(STYLE_CLASS.SELECT);
 				
 			}else if(lastHistory.type === HISTORY_TYPE.ADD){ 
+				console.log("undo ADD -> delete");
 				deleteText(lastHistory.historyId, SAVE_YN.N); 
 				for(const text of lastHistory.text){ // 다시 [선택] 상태로 만들기
 					selectText(text);
 				}
 				
 			}else if(lastHistory.type === HISTORY_TYPE.DELETE){ 
+				console.log("undo DELETE -> add");
 				addTextForUndoRedoBtn(lastHistory.addTextHistoryId);
 			}
 		}
@@ -292,7 +294,7 @@
 				addTextForUndoRedoBtn(lastUndo.historyId);
 				
 			}else if(lastUndo.type === HISTORY_TYPE.DELETE){
-				deleteText(lastUndo.addTextHistoryId);
+				deleteText(lastUndo.addTextHistoryId, SAVE_YN.N);
 			}
 			editHistory.push(lastUndo);
 			undoHistory.pop(); 
